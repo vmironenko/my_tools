@@ -18,7 +18,7 @@ metrics {
     reporter {
         graphite {
             enabled=false
-            host=localhost
+            host={{ graphite_host }}
             port=2003
             reportFrequency=60 //seconds
             filter {
