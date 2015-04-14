@@ -27,7 +27,7 @@ B=""
 while read i
 do
 FF="`echo $i|sed 's/=.*$//g'`"
-E="`echo $i|sed 's/[^=]*=//g'`"
+E="`echo $i|sed 's/^[^=]*=//g'`"
 [ -z "$TT" ] && TT="$F"
 
 T="`echo \"$TT\"|awk -v \"I=$i\" -v \"FF=$FF\" -v \"E=$E\" 'BEGIN{
@@ -44,11 +44,14 @@ B=\"\"
  gsub(\"^[ \t]*\",\"\",D)
  C=B \".\" D
  if ( C ~ FF ) {
-   gsub(\"=.*\",\"=\"E)
-#  print B
+
+   gsub( \"=.*$\",\"\" )
+   $0=$0 "=" E
+#  print 
  }
 print 
 }'`"
 TT="`echo \"$T\"`"
 done </tmp/conf.txt
-echo "$TT" |sed 's/localhost:8080/{{ openrtb_url }}/g'
+echo "$TT" | grep  'localhost' >/dev/null && echo "!!!localhost!!!!" >&2
+echo "$TT" 
