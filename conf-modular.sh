@@ -8,49 +8,65 @@ DD="`cat /home/vmironenko/adserving-devops/playbooks/roles/adserver/configure/te
 
 echo "$DD"|awk 'BEGIN{
 B=""
-}{
-
- if ($0 ~ "[ ]*[a-zA-Z] {$") {
+}
+{
+do {
+ if ($0 ~ ".*[\\[{]$") {
     if (B == "" ) {
 	B=$1; } else {
         B=B "." $1
         }
- }
- if ($0 ~ "^[ ]*}$") gsub(".[^.]*$","",B)
-
+ } else {
+ if ($0 ~ "^[ ]*[}\\]]$") gsub(".[^.]*$","",B)
  if ($0 ~ "{{"){
     gsub("^ *","")
+    gsub("ZZZ1","ZZZ2",B)
+    gsub("=\\[","ZZZ1",B)
     print B "." $0
+  }
  }
+}while (getline) 
 }' >/tmp/conf.txt;
-
-while read i
+#cat /tmp/conf.txt
+#exit
+while read ii
 do
+i="`echo $ii|sed 's/=\[.{.url/Z.url/g'`"
+
 FF="`echo $i|sed 's/=.*$//g'`"
-E="`echo $i|sed 's/^[^=]*=//g'`"
+E="`echo $i|sed 's/^[^ = ]*=//g'`"
 [ -z "$TT" ] && TT="$F"
 
 T="`echo \"$TT\"|awk -v \"I=$i\" -v \"FF=$FF\" -v \"E=$E\" 'BEGIN{
 B=\"\"
-}{
- if ($0 ~ \"[ ]*[a-zA-Z] {$\") {
+}
+{
+do{
+# if ($0 ~ \"[ ]*[a-zA-Z][ =][\\\\[{]$\") {
+ if ($0 ~ \".*[\\\\[{]$\") {
     if (B == \"\" ) {
 	B=$1 } else {
         B=B \".\" $1
         }
- }
- if ($0 ~ \"^[ ]*}$\") gsub(\".[^.]*$\",\"\",B)
+ } else {
+ if ($0 ~ \"^[ ]*[}\\\\]]$\") { 
+    gsub(\".[^.]*$\",\"\",B)
+ } else {
  D=$1
  gsub(\"^[ \t]*\",\"\",D)
+ gsub(\"ZZZ1\",\"ZZZ2\",B)
+ gsub(\"=\\\\[\",\"ZZZ1\",B)
  C=B \".\" D
  if ( C ~ FF"=" ) {
    gsub( \"=.*$\",\"\" )
    $0=$0 "=" E
-#  print 
- }
+#  print
+ }}
+}
 print 
+}while (getline)
 }'`"
 TT="`echo \"$T\"`"
-done </tmp/conf.txt
+done < /tmp/conf.txt
 echo "$TT" | grep  'localhost' >/dev/null && echo "!!!localhost!!!!" >&2
 echo "$TT" 
