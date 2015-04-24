@@ -4,7 +4,7 @@ F="`cat /home/vmironenko/gerrit/modular-adserver/modular-adserver/adserver/src/m
 #F="`cat /home/vmironenko/gerrit/adserving/adserving/adserver/src/main/resources/fixed-configuration.properties`"
 #F="`cat /home/vmironenko/gerrit/adserving/adserving/adserver/src/main/resources/runtime-configuration.properties`"
 
-DD="`cat /home/vmironenko/adserving-devops/playbooks/roles/adserver/configure/templates/configuration.j2`"
+DD="`cat /home/vmironenko/modular-adserver/playbooks/roles/adserver/configure/templates/configuration.j2`"
 
 echo "$DD"|awk 'BEGIN{
 B=""
