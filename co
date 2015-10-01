@@ -1,0 +1,862 @@
+configurationManager {
+  zookeeperConnection="adserver-configuration:2181"
+  sessionTimeout=10000
+  event.pushing.timeout=50
+  version="${project.version}"
+  environment="${build.type}"
+  configurationPath="/#environment#/adserver/#version#/configuration"
+  configurationOverridePath="/#environment#/adserver/#version#/#hostname#/configuration"
+  ephemeralNodePath="/#environment#/adserver/#version#/nodes"
+  staticMeta {
+    port = ${mainHttpService.port}
+  }
+}
+
+mainExecutor {
+    poolSize=40
+    queueSize=2048
+    reconfigurationTimeout=30000 //milliseconds
+}
+
+entityDb {
+    driverClassName=org.postgresql.Driver
+    url="jdbc:postgresql://10.1.42.192:5432/datamart"
+    user=adserver
+    password=change_me
+}
+
+daoScheduler {
+    allowCoreThreadTimeout=false
+    corePoolSize=5
+    maxPoolSize=10
+    queueCapacity=10
+    keepAliveSeconds=60
+    cron="* 10 * * * *"
+}
+
+metrics {
+    reporter {
+        graphite {
+            enabled={{ graphite_on }}
+            host={{ graphite_host }}
+            port={{ graphite_port }}
+            reportFrequency=60 //seconds
+            filter {
+                regexp=""
+            }
+            hostPrefix="#hostname#" // #hostname# is a macros which will be replaced with hostname according to node configuration when service starts
+        }
+        influxdb {
+            enabled=false
+            debugJson=false
+            tagsSupport=false
+            hostPrefix="#hostname#" // #hostname# is a macros which will be replaced with hostname according to node configuration when service starts
+            host=localhost
+            port=8086
+            database=database
+            user=user
+            password=password
+            reportFrequency=60 //seconds
+            filter {
+                regexp=""
+            }
+        }
+        jmx {
+            enabled=true
+            maxHistorySize=4
+        }
+    }
+}
+
+mainHttpService {
+    ssl=false
+    port={{ app_port }}
+    backlog=1024
+    acceptorPool.size=40
+    clientPool.size=40
+    maxBodySize=1048576
+    maxInitialLineSize=4096
+    maxHeaderSize=16384
+    validateHeaders=true
+}
+
+dmaService {
+    hylosFile=/{{ adserver_home }}/lib/dma.hylos
+    injector {
+        prefix=us_
+    }
+}
+
+eventService {
+    eventDeliveryProcessors=2
+    eventQueue.size=262144
+    reconfigurationTimeout=5000
+}
+
+logging {
+    businessLogger {
+        eventTypes=[HTTP_RESPONSE_READY]
+        topics {
+            GW.ad="ads-ad-responses-v2"
+            GW.noad="ads-noad-responses-v2"
+            GW.blacklisted="ads-blacklisted-responses-v2"
+            EN.all="ads-enrichment-v2" //just ("EN") won't work
+            EN.blacklisted="ads-enrichment-blacklisted-v2"
+            ENL="ads-enrichment-logging-v2"
+            BSW.ad="ads-ad-responses-v2"
+            BSW.noad="ads-noad-responses-v2"
+            BSW.blacklisted="ads-blacklisted-responses-v2"
+            MPB.ad="ads-ad-responses-v2"
+            MPB.noad="ads-noad-responses-v2"
+            MPB.blacklisted="ads-blacklisted-responses-v2"
+            IMP="ads-impressions-v2"
+            CLK="ads-clicks-v2"
+            DSKIMP="ads-desktop-impressions-v2"
+            DSKCLK="ads-desktop-clicks-v2"
+            EUIMP="ads-europe-impressions-v2"
+            EUCLK="ads-europe-clicks-v2"
+            TPT="ads-thirdparty-impressions-v2"
+            OO="ads-opt-out-v2"
+            EUGW.ad="ads-europe-ad-responses-v2"
+            EUGW.noad="ads-europe-noad-responses-v2"
+            EUGW.blacklisted="ads-europe-blacklisted-responses-v2"
+            EUBSW.ad="ads-europe-ad-responses-v2"
+            EUBSW.noad="ads-europe-noad-responses-v2"
+            EUBSW.blacklisted="ads-europe-blacklisted-responses-v2"
+            EUMPB.ad="ads-europe-ad-responses-v2"
+            EUMPB.noad="ads-europe-noad-responses-v2"
+            EUMPB.blacklisted="ads-europe-blacklisted-responses-v2"
+            ABEN.all="ads-appboy-enrichment-v2"
+            ABEN.blacklisted="ads-appboy-enrichment-blacklisted-v2"
+        }
+        loggingRequestParameter="logging"
+    }
+
+
+    kafka.sender = {
+        enabled=true
+        metadata.broker.list="localhost:9092"
+        request.required.acks=0
+        request.timeout.ms=10000
+        producer.type=async
+        serializer.class=kafka.serializer.DefaultEncoder
+        #key.serializer.class=
+        partitioner.class=kafka.producer.DefaultPartitioner
+        compression.codec=snappy
+        compressed.topics=""
+        message.send.max.retries=3
+        retry.backoff.ms=1000
+        topic.metadata.refresh.interval.ms=60000
+        queue.buffering.max.ms=300
+        queue.buffering.max.messages=10000
+        queue.enqueue.timeout.ms=-1
+        batch.num.messages=512
+        send.buffer.bytes=33554432
+        client.id=logMessageSender
+    }
+
+    logMessageSender.messageSender.topic=delete-me-it-is-deprecated
+    rawLogMessageSender.messageSender.topic=delete-me-it-is-deprecated
+
+    httpRequestResponseLogger = {
+        topic = http-requests-responses-logs
+        eventTypes=[HTTP_RESPONSE_READY]
+    }
+
+    dfpHttpRequestResponseLogger = {
+        topic = dfp-http-requests-responses
+        eventTypes=[DFP_HTTP_RESPONSE_READY]
+    }
+}
+
+enrichmentInputProcessor {
+    parameter {
+        partnerId=MI
+        applicationId=AP
+        deviceId=[AD,AH,AM,IA,IS,IM,DS,DM,AN,GR,GS,GM,OD]
+        deviceIdTypes=[AD,AH,AM,IA,IS,IM,DS,DM,AN,GR,GS,GM,OD]
+        coordinates {
+            latitude=LT
+            longitude=LG
+            latitudeMin=-80
+            latitudeMax=84
+            longitudeMin=-180
+            longitudeMax=180
+        }
+        tile=tile
+        timestamp=timestamp
+        timePeriod=timeperiod
+        adUnit=SI
+        auctionId=RI
+        country=CO
+        deviceType=DT
+        deviceOs=DO
+        deviceVersion=DV
+        connectionType=CN
+        carrier=CI
+        cpmFloor=CP
+        deviceModel=MD
+    }
+}
+
+gatewayInputProcessor {
+    parameter {
+        partnerId=PT
+        applicationId=AP
+        deviceId=[AD,AH,AM,IA,IS,IM,DS,DM,AN,GR,GS,GM,XU]
+        deviceIdTypes=[AD,AH,AM,IA,IS,IM,DS,DM,AN,GR,GS,GM,XU]
+        deviceUserAgent=UA
+        deviceBrand=DB
+        deviceModel=DN
+        deviceSubModel=MD
+        ip=IP
+        coordinates {
+            latitude=LT
+            longitude=LG
+            latitudeMin=-80
+            latitudeMax=84
+            longitudeMin=-180
+            longitudeMax=180
+        }
+        adUnit=AU
+        adTypes=AT
+        adSize=SZ
+        adCategories=CT
+        adExclusionCategories=EC
+        returnType=ST
+        brandSafe=BS
+        requestType=RT
+        auctionId=AI
+        country=CO
+        deviceType=DT
+        deviceOs=DO
+        deviceVersion=DV
+        connectionType=CN
+        carrier=CI
+        zipCode=ZP
+        brandSafe=BS
+        accuracy=AC
+        locationOrigin=LO
+        deviceSdk=SD
+        deviceSdkVersion=SV
+        age=AG
+        yearOfBirth=YR
+        gender=GN
+        recency=RC
+        language=LN
+        cpmFloor=CP
+        bundle=BN
+        publisher=PB
+        storeUrl=SU
+        marital=MR
+    }
+}
+
+gatewayOutputProcessor {
+    dtdXmlAdUrl="http://ads.placeiq.com/2/ad/placeiq_ad_response.dtd"
+    dtdXmlNoAdUrl="http://ads.placeiq.com/2/ad/placeiq_no_ad_response.dtd"
+}
+
+enrichment {
+    aerospike {
+        host=localhost
+        port=3000
+        async.maxCommands=512
+        async.selectorThreads=40
+        read.maxRetries=0
+        read.sleepBetweenRetries=0
+        read.priority=DEFAULT
+        write.maxRetries=0
+        write.sleepBetweenRetries=0
+        write.priority=DEFAULT
+        write.ttl=0
+        write.recordExistsAction=UPDATE
+        batch.maxRetries=0
+        batch.sleepBetweenRetries=0
+        batch.priority=DEFAULT
+        batch.maxConcurrentThreads=40
+        query.priority=DEFAULT
+        query.maxConcurrentNodes=256
+    }
+    aerospikeDiagnostician {
+        namespaces=[enricher]
+        timeout=5
+    }
+    service {
+        namespace=enricher
+        segmentBin=s
+        useAllDeviceIds=true
+        exposeAudience=[EXP,EXP1]
+        controlAudience=[ABC,ABC1]
+    }
+    static {
+        audiences=[]
+        audiencesNow=[eu1]
+        specialAudiences=[]
+    }
+}
+
+dfp {
+    cipherEncoder {
+        trustKey=j34r32j0dj8902349rf23dkd
+        cipherPool.size=10
+        cipherType=AES/ECB/PKCS5Padding
+        keyType=AES
+    }
+    httpClientService {
+        alwaysTrustSSL=false
+        pool.maxConnections=8192
+        pool.maxConnectionsPerRoute=4096
+        pool.keepAlive=60000
+        pool.connect.timeout=90
+        pool.socket.timeout=90
+    }
+    diagnostician.checks=[
+        {
+            url="http://pubads.g.doubleclick.net/gampad/adx"
+            responseStatus=400
+        }
+        {
+            url="http://pubads.g.doubleclick.net/gampad/ads"
+            responseStatus=400
+        }
+    ]
+    uriBuilder {
+        default {
+            whiteListing.enabled=true
+            userAgentFromParam=false
+            frequencyCapping.level=2
+            networkId=51024290
+            url="http://pubads.g.doubleclick.net/gampad/adx"
+            shuffleAudiences=true
+        }
+        vast {
+            userAgentFromParam=false
+            frequencyCapping.level=2
+            networkId=51024290
+            url="http://pubads.g.doubleclick.net/gampad/ads"
+            shuffleAudiences=true
+            adSize.replace=true
+            adSize.default=640x480
+        }
+        shortening {
+            truncateToMaxUrlLength=true
+            maxUrlLength=16384
+        }
+    }
+}
+
+blacklist {
+    aerospike {
+        host=localhost
+        port=3000
+        async.maxCommands=512
+        async.selectorThreads=40
+        read.maxRetries=0
+        read.sleepBetweenRetries=0
+        read.priority=DEFAULT
+        write.maxRetries=0
+        write.sleepBetweenRetries=0
+        write.priority=DEFAULT
+        write.ttl=0
+        write.recordExistsAction=UPDATE
+        batch.maxRetries=0
+        batch.sleepBetweenRetries=0
+        batch.priority=DEFAULT
+        batch.maxConcurrentThreads=40
+        query.priority=DEFAULT
+        query.maxConcurrentNodes=256
+    }
+    aerospikeDiagnostician {
+        namespaces=[blacklist]
+        timeout=5
+    }
+    aerospikeDao{
+        namespace=blacklist
+        set=null
+        bin=value
+        update.timeout=5000
+        update.interval=60000
+    }
+    service {
+    }
+}
+
+dfpClientService {
+    userAgentFromParam=false
+    userAgent=PIQ_DFP_0.1
+}
+
+openRtb {
+    moPub.biddingService {
+        nUrl="http://localhost:8080/i/?RI=${REQUEST_ID}&RAI=${AUCTION_ID}&RABDI=${AUCTION_BID_ID}&RAII=${AUCTION_IMP_ID}&RASI=${AUCTION_SEAT_ID}&RAAI=${AUCTION_AD_ID}&RAP=${AUCTION_PRICE}"
+        seat=placeiq
+    }
+    bidSwitch.biddingService {
+        nUrl="http://localhost:8080/i/?RI=${REQUEST_ID}&RAP=${AUCTION_PRICE}"
+        vastUrl="http://localhost:8080/vast/?RI=${REQUEST_ID}"
+        seat=68
+    }
+}
+
+creativeCache {
+    service {
+        writeTimeout=100 //milliseconds
+        accessControlAllowOrigin="*"
+    }
+    serialization {
+        kryo.bufferSize=100000
+        kryo.register=[]
+    }
+    aerospike {
+        host=localhost
+        port=3000
+        async.maxCommands=512
+        async.selectorThreads=40
+        read.maxRetries=0
+        read.sleepBetweenRetries=0
+        read.priority=DEFAULT
+        write.maxRetries=0
+        write.sleepBetweenRetries=0
+        write.priority=DEFAULT
+        write.ttl=0
+        write.recordExistsAction=UPDATE
+        batch.maxRetries=0
+        batch.sleepBetweenRetries=0
+        batch.priority=DEFAULT
+        batch.maxConcurrentThreads=40
+        query.priority=DEFAULT
+        query.maxConcurrentNodes=256
+    }
+    aerospikeDao {
+        namespace=creatives
+        set=test
+        bin=test
+    }
+    aerospikeDiagnostician {
+        namespaces=[creatives]
+        timeout=5
+    }
+}
+
+gatewayEndpoint {
+    code=GW
+    processing.timeout=100000000 //nanoseconds
+}
+
+openRtb {
+    bidSwitchEndpoint {
+        code=BSW
+        processing.timeout=100000000 //nanoseconds
+    }
+    moPubEndpoint {
+        code=MPB
+        processing.timeout=100000000 //nanoseconds
+    }
+}
+
+bidSwitchVastEndpoint {
+    code=BSWV
+    processing.timeout=1000000000 //nanoseconds
+    keyExtractor.parameter=RI
+    valueInjector.class="java.lang.String"
+}
+
+bidSwitchVastOptionsEndpoint {
+    code=BSWVO
+    processing.timeout=300000000 //nanoseconds
+}
+
+enrichmentEndpoint {
+    code=EN
+    blacklist {
+        tilePrefix="appnexus|"
+    }
+    processing.timeout=10000000 //nanoseconds
+}
+
+enrichmentLoggingEndpoint {
+    code=ENL
+    processing.timeout=10000000 //nanoseconds
+}
+
+europe {
+    gatewayEndpoint {
+        code=EUGW
+        processing.timeout=100000000 //nanoseconds
+    }
+    openRtb {
+        bidSwitchEndpoint {
+            code=EUBSW
+            processing.timeout=100000000 //nanoseconds
+        }
+        moPubEndpoint {
+            code=EUMPB
+            processing.timeout=100000000 //nanoseconds
+        }
+    }
+}
+
+tracker {
+    appnexusPredicate {
+        paramName=AP
+        paramValue=AN
+        caseSensitive=false
+    }
+    impression {
+        code=IMP
+        processing.timeout=90000000 //nanoseconds
+        default {
+            parameter {
+                originalRequestId=RI
+                redirectUrl=""
+                lineItemId=LI
+                orderId=OI
+                creativeId=CC
+                external {
+                    lineItemId=LI
+                    orderId=OI
+                    creativeId=CC
+                }
+                ip=IP
+                deviceId=[DA,DI,DS,DM,GR]
+                deviceIdTypes=[AD,IA,DS,DM,GR]
+                deviceBrand=MM
+                deviceModel=MO
+                deviceUserAgentBrand=UM
+                deviceUserAgentModel=UO
+                coordinates {
+                    longitude=LO
+                    latitude=LA
+                }
+                adPlatform=AP
+                auction {
+                    id=RAI
+                    bidId=RABDI
+                    impressionId=RAII
+                    seatId=RASI
+                    adId=RAAI
+                    price=RAP
+                }
+                adUnitId=AU
+                partner=PT
+                publisherId=PI
+                applicationId=AI
+            }
+        }
+        appnexus {
+            parameter {
+                originalRequestId=""
+                redirectUrl=""
+                lineItemId=""
+                orderId=OI
+                creativeId=""
+                external {
+                    lineItemId=""
+                    orderId=CI
+                    creativeId=CC
+                }
+                ip=IP
+                deviceId=[DA,DI,DS,DM,GR]
+                deviceIdTypes=[AD,IA,DS,DM,GR]
+                deviceBrand=MM
+                deviceModel=MO
+                deviceUserAgentBrand=""
+                deviceUserAgentModel=""
+                coordinates {
+                    longitude=LO
+                    latitude=LA
+                }
+                adPlatform=AP
+                auction {
+                    id=RI
+                    bidId=""
+                    impressionId=""
+                    seatId=""
+                    adId=""
+                    price=""
+                }
+                adUnitId=AU
+                partner=PT
+                publisherId=PI
+                applicationId=AI
+            }
+        }
+    }
+
+    click {
+        code=CLK
+        processing.timeout=90000000 //nanoseconds
+        default=${tracker.impression.default} {
+            parameter {
+                redirectUrl=UR
+            }
+        }
+        appnexus=${tracker.impression.appnexus} {
+            parameter {
+                redirectUrl=UR
+            }
+        }
+    }
+
+    desktop {
+        impression {
+            code=DSKIMP
+            processing.timeout=90000000 //nanoseconds
+            default=${tracker.impression.default}
+            appnexus=${tracker.impression.appnexus}
+        }
+
+        click {
+            code=DSKCLK
+            processing.timeout=90000000 //nanoseconds
+            default=${tracker.click.default}
+            appnexus=${tracker.click.appnexus}
+        }
+    }
+
+    europe {
+        impression {
+            code=EUIMP
+            processing.timeout=90000000 //nanoseconds
+            default=${tracker.impression.default}
+            appnexus=${tracker.impression.appnexus}
+        }
+
+        click {
+            code=EUCLK
+            processing.timeout=90000000 //nanoseconds
+            default=${tracker.click.default}
+            appnexus=${tracker.click.appnexus}
+        }
+    }
+
+    thirdparty {
+        code=TPT
+        processing.timeout=90000000 //nanoseconds
+        parameter {
+            originalRequestId=RI
+            redirectUrl=""
+            lineItemId=""
+            orderId=TD
+            creativeId=""
+            external {
+                lineItemId=LI
+                orderId=CI
+                creativeId=CC
+            }
+            ip=IP
+            deviceId=[DA,DI,DS,DM,GR]
+            deviceIdTypes=[AD,IA,DS,DM,GR]
+            deviceBrand=MM
+            deviceModel=MO
+            deviceUserAgentBrand=""
+            deviceUserAgentModel=""
+            coordinates {
+                longitude=LO
+                latitude=LA
+            }
+            adPlatform=AP
+            auction {
+                id=RAI
+                bidId=RABDI
+                impressionId=RAII
+                seatId=RASI
+                adId=RAAI
+                price=RAP
+            }
+            adUnitId=AU
+            partner=PT
+            publisherId=PI
+            applicationId=AI
+        }
+    }
+}
+
+optout {
+    code=OO
+    processing.timeout=100000000 //nanoseconds
+    deviceId {
+        groups=[android,ios,advertiser]
+        group {
+            android=[AD,AM,AH]
+            ios=[IA,IM,IS]
+            advertiser=[GR,GM,GS]
+        }
+    }
+    service {
+        removeFromAerospike=true
+        namespace=enricher
+    }
+}
+
+versionEndpoint {
+    code=VER
+    processing.timeout=300000000 //nanoseconds
+}
+
+readyEndpoint {
+    code=RDY
+    processing.timeout=300000000 //nanoseconds
+    response.body=1
+}
+
+simpleAuthorizationService {
+    auth.key {
+        name=ATOKEN
+        value=secret-key
+    }
+    routes=[
+        {
+            route=/ping
+            methods=[POST]
+        }
+        {
+            route=/data/ping
+            methods=[POST]
+        }
+        {
+            route=/2/ad/ping
+            methods=[POST]
+        }
+        {
+            route=/openrtb/mpb/ping
+            methods=[POST]
+        }
+        {
+            route=/openrtb/bsw/ping
+            methods=[POST]
+        }
+        {
+            route=/metrics
+            methods=[GET]
+        }
+        {
+            route=/check
+            methods=[GET]
+        }
+        {
+            route=/configuration
+            methods=[GET]
+        }
+    ]
+}
+
+routedPingEndpoint {
+    processing.timeout=300000000 //nanoseconds
+    parameters.online=online
+    response.online=pong
+    response.offline=offline
+    routes=[
+        {
+            uri=/ping
+            online=true
+        }
+        {
+            uri=/data/ping
+            online=true
+        }
+        {
+            uri=/2/ad/ping
+            online=true
+        }
+        {
+            uri=/openrtb/mpb/ping
+            online=true
+        }
+        {
+            uri=/openrtb/bsw/ping
+            online=true
+        }
+    ]
+}
+
+metricsEndpoint {
+    code=MTR
+    processing.timeout=300000000 //nanoseconds
+    rateUnit=seconds
+    durationUnit=seconds
+    showSamples=false
+}
+
+checkEndpoint {
+    code=CHK
+    processing.timeout=5000000000 //nanoseconds
+}
+
+configurationEndpoint {
+    code=CFG
+    processing.timeout=5000000000 //nanoseconds
+}
+
+staticResourcesEndpoint {
+    processing.timeout=5000000000 //nanoseconds
+    resources=[
+        {
+            name=placeiq_ad_response.dtd
+            uri=/2/ad/placeiq_ad_response.dtd
+            contentType=application/xml-dtd
+        }
+        {
+            name=placeiq_no_ad_response.dtd
+            uri=/2/ad/placeiq_no_ad_response.dtd
+            contentType=application/xml-dtd
+        }
+    ]
+}
+
+appboy {
+    deviceIdMapperEndpoint {
+        cipherEncoder {
+            trustKey=ab854ecf22d539f2f8876e55
+            initializationVector=0f41c5da0d0e5cf6
+            cipherPool.size=10
+            cipherType=AES/CBC/PKCS5Padding
+            keyType=AES
+        }
+        deviceIdEncoder {
+            signature=PIQID
+        }
+        inputProcessor.parameter {
+            deviceIdParam=DI
+            deviceIdTypeParam=DT
+        }
+        code=ABDM
+        processing.timeout=5000000000 //nanoseconds
+    }
+    enrichmentEndpoint {
+        inputProcessor.parameter {
+            partnerId=MI
+            applicationId=AP
+            encryptedDeviceId=DI
+            coordinates {
+              latitude=LT
+              longitude=LG
+              latitudeMin=-80
+              latitudeMax=84
+              longitudeMin=-180
+              longitudeMax=180
+            }
+            tile=tile
+            timestamp=timestamp
+            timePeriod=timeperiod
+            adUnit=SI
+            auctionId=RI
+            country=CO
+            deviceType=DT
+            deviceOs=DO
+            deviceVersion=DV
+            connectionType=CN
+            carrier=CI
+            cpmFloor=CP
+            deviceModel=MD
+        }
+        code=ABEN
+        processing.timeout=5000000000 //nanoseconds
+    }
+}
+
+badRequestEndpoint {
+    code=BDREQ
+    processing.timeout=5000000000 //nanoseconds
+}
