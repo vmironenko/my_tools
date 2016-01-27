@@ -1,0 +1,3 @@
+'<img src="./graph/gatling_per_sec.png">' '<img src="./graph/gatling_latency.png">'
+'<img src="./graph/gatling_users.png">' '<img src="./graph/gc_duration.png">'
+'<img src="./graph/gc_collcount.png">' ''

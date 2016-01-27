@@ -1,0 +1,2 @@
+'<img src="./graph/cpu_grinders.png">' '<img src="./graph/disk_grinders.png">'
+'<img src="./graph/network_grinders_tx.png">' ''

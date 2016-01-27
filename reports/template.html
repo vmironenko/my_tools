@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head><title>F(echo ${TITLE})</title>
+ <style type="text/css">
+    div {
+        width: 1220px;
+        position: relative;
+        margin-right: auto;
+        margin-left: auto;
+    }
+    img {
+        height: 300px; 
+        width: 600px;
+    }
+    table {
+        border-style: solid;
+        margin-bottom: 60px;
+        border-collapse: collapse;
+    }
+    td, th {
+        padding: 10px;
+    }
+    * {
+        border-color: rgba(178, 174, 174, 0.9);
+    }
+ </style>
+</head>
+    <body>
+        <div>
+            <h1>Results of F(echo $HEAD_LINE)<h1/>
+            <h3><pre>
+Target node: F(echo $TARGET_HOST)
+Adserver version: F(echo $VERSION)
+USERS (all): F(echo $USERS)
+Duration: F(echo $DURATION) min
+Date: F(date)
+
+Description: F(echo $DESCRIPTION)
+
+            </pre></h3><br/>
+            
+F(table table.txt)
+System metrics of the target node
+F(table table1.txt)
+System metrics of the grinder nodes
+F(table table2.txt)
+   F(echo "sample1")  text='F(echo "sample2")': end
+</div>
+</body>
+</html>

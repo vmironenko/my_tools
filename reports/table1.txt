@@ -1,0 +1,2 @@
+'<img src="./graph/cpu_target.png">' '<img src="./graph/disk_target.png">'
+'<img src="./graph/network_target_tx.png">' ''
