@@ -38,6 +38,15 @@ echo ""|cat $1 - | while read line
 echo "</table>"
 }
 
+cicle(){  #this command 'template%s...%s...' file_name (with val1 val2 \n .....)
+ temp=$1
+ echo ""|cat $2 - | while read line
+  do
+   [ -n "$line" ] && printf "$temp" $line
+  done
+}
+        
+
 clean() {
     cat - |sed "s/++++n++++/ /g; s/++++q++++/'/g; s/++++t++++/\t/g"
 }
