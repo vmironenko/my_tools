@@ -38,14 +38,22 @@ echo ""|cat $1 - | while read line
 echo "</table>"
 }
 
-cicle(){  #this command 'template%s...%s...' file_name (with val1 val2 \n .....)
+cicle(){  #this command 'template%s...%s...' file_name (with val1 val2 \n .....)  [el(it's to erase lasts character)]
  temp=$1
- echo ""|cat $2 - | while read line
-  do
+ {
+  echo ""|cat $2 - | while read line
+   do
    [ -n "$line" ] && printf "$temp" $line
-  done
+   done
+ } | {
+  if [ "$3" == "el" ]
+   then
+    cat -|sed 's/.$//g'
+   else
+    cat -
+  fi
+ }
 }
-        
 
 clean() {
     cat - |sed "s/++++n++++/ /g; s/++++q++++/'/g; s/++++t++++/\t/g"
@@ -70,8 +78,7 @@ echo ""|cat "$1" - |sed "s/ /++++n++++/g; s/'/++++q++++/g; s/\t/++++t++++/g"| wh
  do
     echo -n "$line"|grep -qE "F([^)]*)" && {
 	replace `echo -n "$line"|sed 's/\(F([^)]*)\)/ \1 /g'`
-    
-    
+
 #	func="`echo "$line"|sed 's/^.*F(\([^)]*\)).*/\1/g'`"
 #	echo -n "$line"|sed 's/^\(.*\)F(.*/\1/g'
 #	echo -n "$(eval $func)"
