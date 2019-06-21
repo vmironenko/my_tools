@@ -2,6 +2,7 @@
 
 n_tabl=1
 
+# setting integrated functions
 pars(){
     n=$#
     i=1
@@ -20,25 +21,25 @@ pars(){
 }
 
 table(){
-if [ -z "$1" ] 
-    then 
+if [ -z "$1" ]
+    then
         echo "Table error: There isn't any parameters"
 	exit 1
-fi 
+fi
 itm="th"
-echo "<table border=1 class=\"tabl${n_tabl}\">"
+echo "<table border=1 class=\"table_${n_tabl}\">"
 echo ""|cat $1 - | while read line
- do 
+ do
     [ -z "$line" ] && continue
     echo " <tr>"
     eval "pars $line"
     itm='td'
     echo " </tr>"
- done 
+ done
 echo "</table>"
 }
 
-cicle(){  #this command 'template%s...%s...' file_name (with val1 val2 \n .....)  [el(it's to erase lasts character)]
+repeat(){  #repeat 'template%s...%s...' file_name [el(it's to erase lasts character)]
  temp=$1
  {
   echo ""|cat $2 - | while read line
@@ -55,35 +56,14 @@ cicle(){  #this command 'template%s...%s...' file_name (with val1 val2 \n .....)
  }
 }
 
-clean() {
-    cat - |sed "s/++++n++++/ /g; s/++++q++++/'/g; s/++++t++++/\t/g"
-}
-
-replace() {
-    n=$#
-    i=1
-    while [ "$i" -le "$n" ]
-	do
-	L="`echo -n ${!i}`"
-	echo -n "$L"|grep -qE "F\(" && {
-		EXEC="`echo -n $L |clean |sed 's/F(\([^)]*\))/\1/g'`"
-		echo -n "$(eval $EXEC)"
-	} || echo -n "$L"|clean
-	i=$[i+1]
-    done
-    echo -e '\n'
-}
-
-echo ""|cat "$1" - |sed "s/ /++++n++++/g; s/'/++++q++++/g; s/\t/++++t++++/g"| while read line
+# the handler
+echo ""|cat $1 - | while read line
  do
-    echo -n "$line"|grep -qE "F([^)]*)" && {
-	replace `echo -n "$line"|sed 's/\(F([^)]*)\)/ \1 /g'`
-
-#	func="`echo "$line"|sed 's/^.*F(\([^)]*\)).*/\1/g'`"
-#	echo -n "$line"|sed 's/^\(.*\)F(.*/\1/g'
-#	echo -n "$(eval $func)"
-#	n_tabl=$((n_tabl+1))
-#	echo  "$line"|sed 's/^.*F([^)]*)\(.*\)/\1/g'
-    } || echo "$line"|clean
- done 
- 
+    echo "$line"|grep -qE "F\([^)]*\)" && {
+	func="`echo "$line"|sed 's/^.*F(\([^)]*\)).*/\1/g'`"
+	echo -n "$line"|sed 's/^\(.*\)F(.*/\1/g'
+	echo -n "$(eval $func)"
+        n_tabl=$((n_tabl+1))
+	echo  "$line"|sed 's/^.*F([^)]*)\(.*\)/\1/g'
+    } || echo "$line"
+ done

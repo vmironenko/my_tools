@@ -1,0 +1,2 @@
+'attr(rowspan="2")Status' 'attr(colspan="15")Sum&nbsp;of&nbsp;response&nbsp;depending&nbsp;on&nbsp;the&nbsp;size'
+    0 10 50 100 200 500 1000 2000 5000 '&gt;5000' Total

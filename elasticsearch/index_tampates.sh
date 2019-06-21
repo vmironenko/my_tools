@@ -1,12 +1,12 @@
 #!/bin/bash
 
-curl -XPUT 10.1.41.218:9200/_template/template_adserver -d '
+curl -XPUT elastic-server:9200/_template/template_adserver -d '
 {
-  "template" : "adserver*",
+  "template" : "ad*",
   "mappings":{
    "fluentd":{
     "properties":{
-        "adserver_host":{"type":"string", "index" : "not_analyzed" },
+        "ad_host":{"type":"string", "index" : "not_analyzed" },
         "body":{"type":"string", "index" : "not_analyzed" },
         "class":{"type":"string", "index" : "not_analyzed" },
         "class_except_1":{"type":"string", "index" : "not_analyzed" },

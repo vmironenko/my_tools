@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><title>F(echo ${TITLE})</title>
- <style type="text/css">
+<style type="text/css">
     div {
         width: 1220px;
         position: relative;
@@ -9,7 +9,7 @@
         margin-left: auto;
     }
     img {
-        height: 300px; 
+        height: 300px;
         width: 600px;
     }
     table {
@@ -23,7 +23,8 @@
     * {
         border-color: rgba(178, 174, 174, 0.9);
     }
- </style>
+</style>
+
 </head>
     <body>
         <div>
@@ -38,13 +39,12 @@ Date: F(date)
 Description: F(echo $DESCRIPTION)
 
             </pre></h3><br/>
-            
 F(table table.txt)
 System metrics of the target node
 F(table table1.txt)
 System metrics of the grinder nodes
 F(table table2.txt)
-   F(echo "sample1")  text='F(echo "sample2")': end
+
 </div>
 </body>
 </html>
